@@ -1,8 +1,12 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 import csv
 import os
 
 app = Flask(__name__)
+
+# Enable CORS for all origins
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Path to the CSV file where data will be stored
 CSV_FILE = 'data.csv'
@@ -13,21 +17,6 @@ if not os.path.exists(CSV_FILE):
         writer = csv.writer(file)
         writer.writerow(['Name', 'Phone Number'])  # Add headers
 
-
-@app.route('/download')
-def download_file():
-    # Ensure the file exists before attempting to send it
-    if os.path.exists(CSV_FILE):
-        return send_from_directory(
-            directory=os.getcwd(),  # Current working directory
-            path=CSV_FILE,           # The CSV file to be downloaded
-            as_attachment=True,      # Forces download instead of opening in the browser
-            download_name='data.csv', # The name the file will have when downloaded
-            mimetype='text/csv'       # MIME type for CSV files
-        )
-    else:
-        return "File not found", 404
-    
 @app.route('/submit', methods=['POST'])
 def submit_data():
     # Get JSON data from the request
@@ -45,6 +34,10 @@ def submit_data():
         writer.writerow([name, phone])
 
     return jsonify({'message': 'Data saved successfully'}), 200
+
+@app.route('/download', methods=['GET'])
+def download_csv():
+    return send_file(CSV_FILE, as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
