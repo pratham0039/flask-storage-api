@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import csv
 import os
 
@@ -13,6 +13,21 @@ if not os.path.exists(CSV_FILE):
         writer = csv.writer(file)
         writer.writerow(['Name', 'Phone Number'])  # Add headers
 
+
+@app.route('/download')
+def download_file():
+    # Ensure the file exists before attempting to send it
+    if os.path.exists(CSV_FILE):
+        return send_from_directory(
+            directory=os.getcwd(),  # Current working directory
+            path=CSV_FILE,           # The CSV file to be downloaded
+            as_attachment=True,      # Forces download instead of opening in the browser
+            download_name='data.csv', # The name the file will have when downloaded
+            mimetype='text/csv'       # MIME type for CSV files
+        )
+    else:
+        return "File not found", 404
+    
 @app.route('/submit', methods=['POST'])
 def submit_data():
     # Get JSON data from the request
